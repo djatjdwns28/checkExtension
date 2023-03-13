@@ -7,24 +7,34 @@ var logger = require('morgan');
 var history = require('connect-history-api-fallback')
 var indexRouter = require('./routes/index')
 var extensionsRouter = require('./routes/extension');
-
+var http = require('http')
 var app = express();
+const hostname = '49.247.32.196'
+const port = '3000'
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
+  res.end('Hello World');
+})
+server.listen(port, hostname, () =>{
+  console.log('성공!')
+})
 
 const corsOptions = {
   origin: true,
   credentials: true,
 }
 //cors setup
-app.use(cors(corsOptions));
+app.use(cors());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
-app.set('port', 3000);
+app.set('port', port);
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use('/', indexRouter)
