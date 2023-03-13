@@ -36,7 +36,7 @@
     methods:{
       async chageCheck(item,idx){
 
-        const response = await this.$axios.put(`${item.id}`, {
+        const response = await this.$axios.put(`/extension/${item.id}`, {
           show : item.show === 0 ? 1 : 0,
         })
 
@@ -61,7 +61,7 @@
         })
       },
       async addExtension(){
-        const res = await this.$axios.post('/add', {
+        const res = await this.$axios.post('/extension/add', {
           name: this.newExtension,
           show: 1,
         })
@@ -85,7 +85,7 @@
         if(chip.fixed === 1){
           this.removeChip(chip)
         } else {
-          const res = await this.$axios.delete(`/delete/${chip.id}`)        
+          const res = await this.$axios.delete(`/extension/delete/${chip.id}`)        
           if(res.status === 200){
             this.removeChip(chip)
           }
@@ -93,7 +93,7 @@
       },
     },
     async mounted(){
-      this.extensionList = (await this.$axios.get('/')).data
+      this.extensionList = (await this.$axios.get('/extension')).data
       this.extensionList.forEach(extension => {
         extension.value = extension.show === 0 ? false : true
         if(extension.show === 1){
