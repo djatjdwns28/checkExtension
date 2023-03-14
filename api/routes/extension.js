@@ -15,7 +15,7 @@ router.get('/', async function(req, res, next) {
 });
 
 router.put('/:id', async function(req, res) {
-  const updateExtensionShowQuery = 'UPDATE extensions SET `show` = ? WHERE id = ?'
+  const updateExtensionShowQuery = 'UPDATE extensions SET value = ? WHERE id = ?'
   const connection = await pool.getConnection(async (conn) => conn)
 
   let result
@@ -23,7 +23,7 @@ router.put('/:id', async function(req, res) {
     const body = req.body
     const id = req.params.id
     await connection.beginTransaction();
-    [result] = await connection.query(updateExtensionShowQuery, [body.show, id]);
+    [result] = await connection.query(updateExtensionShowQuery, [body.value, id]);
     await connection.commit();
   }catch(error){
     res.status(501)
@@ -36,27 +36,40 @@ router.put('/:id', async function(req, res) {
   }
 }) 
 
-router.post('/add', async function(req, res) {
-  const addExtensionQuery = 'insert into extensions (name, `show`) values (?, ?) '
+router.post('/add', async function(req, res, next) {
+  const addExtensionQuery = 'insert into extensions (name, value) values (?, ?) '
+  const checkDuplicate = 'select * from extensions where name = ?'
   const connection = await pool.getConnection(async (conn) => conn)
 
-  let result
   try{
     const body = req.body
     await connection.beginTransaction();
-    [result] = await connection.query(addExtensionQuery, [body.name, body.show]);
+    const [result] = await connection.query(checkDuplicate, body.name);
+    if(result.length > 0) {
+      res.send({duplicate: true, message:'이미 존재하는 데이터 입니다'})
+    } else {
+      const [data] = await connection.query(addExtensionQuery, [body.name, body.value]);
+      res.send({duplicate: false, data}) 
+    }
     await connection.commit();
   }catch(error){
-    res.status(501)
-    result = {message:error.message}
     connection.rollback()
-    throw error;
-  } finally {
+    console.log(error)
+    throw error
+  }finally {
     connection.release()
-    res.send(result)
   }
 }) 
-
+router.delete('/delete/all', async function(req, res) {
+  const deleteExtensionQuery = 'delete from extensions where fixed = 0'
+  try{
+    const [result] = await pool.query(deleteExtensionQuery)
+    res.json(result)
+  }catch(error){
+    console.log(error)
+    throw error
+  }
+})
 router.delete('/delete/:id', async function(req, res) {
   const id = req.params.id
   const deleteExtensionQuery = 'delete from extensions where id = ?'
