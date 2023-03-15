@@ -45,6 +45,7 @@
       addBtnLoading2: false,
       rules:{
         extensionRule : [
+          v => !!v || '값을 입력해주세요',
           v => /^[a-zA-Z]*$/.test(v) || '확장자는 영문만 입력 가능합니다.',
           v => (v && v.length <= 20) || '최대 20자만 가능합니다.',
         ]
@@ -59,8 +60,11 @@
       }
     },
     methods:{
+      /**
+       * @method changeCheck
+       * @description 고정 확장자 체크시 디비에 저장되며 체크해제시 value값이 바뀐다.
+       */
       async changeCheck(item,idx){
-
         const response = await this.$axios.put(`/extension/${item.id}`, {
           value : item.value === 0 ? 1 : 0,
         })
@@ -73,12 +77,13 @@
               this.addChip(this.extensionList[idx])
             }
           }
-          if(this.extensionList[idx].value === 0){
-            this.removeChip(this.extensionList[idx])
-          }
         }
         
       },
+      /**
+       * @method addChip
+       * @description 커스텀 확장자 추가시 칩 생성 용도
+       */
       addChip(item){
         if(this.chipGroup.length > 200) {
           alert('더 이상 추가할 수 없습니디ㅏ.')
@@ -87,11 +92,19 @@
           this.chipGroup.push(item)
         }
       },
+      /**
+       * @method removeChip
+       * @description 커스텀확장자 이름 옆 x클릭시 추가한 커스텀 확장자 삭제
+       */
       removeChip(item){
         this.chipGroup = this.chipGroup.filter(chip =>{
           return chip.id !== item.id
         })
       },
+      /**
+       * @method addExtension
+       * @description 커스텀 확장자 추가기능
+       */
       async addExtension(){
         this.addBtnLoading = true
         const validate = this.$refs.form.validate()
@@ -116,19 +129,19 @@
                   name: this.newExtension.trim(),
                   value: 1,
                 })
-                console.log(res)
                 if(res.status === 200){
                   if(res.data.duplicate === true){
                     alert(res.data.message);
                     this.addBtnLoading = false
-                  } else {
+                  } 
+                  if(res.data.duplicate === false){
                     this.addChip({
-                      id: res.data.insertId,
+                      id: res.data.id,
                       name: this.newExtension,
                       value: 1,
                     })
                     this.extensionList.push({
-                      id: res.data.insertId,
+                      id: res.data.id,
                       name: this.newExtension,
                       value: 1,
                       fixed: 0,
@@ -143,25 +156,40 @@
         this.addBtnLoading = false
         
       },
+      /**
+       * @method 커스텀 확장자 선택 삭제 
+       * @description 추가한 확장자 옆 x 버튼 클릭 시 커스텀 확장자 db에서 삭제
+       */
       async removeExtension(chip){
           const res = await this.$axios.delete(`/extension/delete/${chip.id}`)        
           if(res.status === 200){
             this.removeChip(chip)
           }
       },
+      /**
+       * @method 커스텀 확장자 전체 삭제
+       * @description 커스텀 확장자 전체 삭제
+       */
       async deleteAll(){
         this.addBtnLoading2 = true
         if(confirm('정말 전체 초기화를 진행하시겠습니까?')) {
-          const res = await this.$axios.delete('/extension/delete/all')
-          if(res.status === 200){
-            alert('초기화 하였습니다!')
-            this.chipGroup = []
-            this.addBtnLoading2 = false
+          if(this.chipGroup.length === 0){
+            alert('초기화 할 데이터가 없습니다!')
+          } else {
+            const res = await this.$axios.delete('/extension/delete/all')
+            if(res.status === 200){
+              alert('초기화 하였습니다!')
+              this.chipGroup = []
+              this.addBtnLoading2 = false
+            }
           }
-        } else {
-          this.addBtnLoading2 = false
         }
+        this.addBtnLoading2 = false
       },
+      /**
+       * @method setDefaultData
+       * @description 초기 렌더링용
+       */
       async setDefaultData(){
         this.extensionList = (await this.$axios.get('/extension')).data
         this.extensionList.forEach(extension => {

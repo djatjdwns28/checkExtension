@@ -2,8 +2,10 @@ var express = require('express');
 var router = express.Router();
 var pool = require('../config/config')
 
-
-/* GET users listing. */
+/**
+ * @const findExtQuery 확장자 전체 리스트 불러오기 쿼리문
+ * @const result 확장자 전체 리스트 불러온 결과문 
+ */
 router.get('/', async function(req, res, next) {
   try {
     const findExtQuery = 'select * from extensions'
@@ -11,9 +13,16 @@ router.get('/', async function(req, res, next) {
     res.send(result)
   } catch(error){
     console.log(error)
+    throw error
   }
 });
-
+/**
+ * @const updateExtensionShowQuery 해당 아이디에 속하는 value 값을 업데이트 시키는 용도의 쿼리문
+ * @const connection pool에서 커넥션 가져오기 
+ * @let result 클라이언트로 보낼 결과물
+ * @const body 클라이언트에서 보낸 데이터 
+ * @const id 수정할 아이디 값
+ */
 router.put('/:id', async function(req, res) {
   const updateExtensionShowQuery = 'UPDATE extensions SET value = ? WHERE id = ?'
   const connection = await pool.getConnection(async (conn) => conn)
@@ -35,7 +44,15 @@ router.put('/:id', async function(req, res) {
     res.send(result)
   }
 }) 
-
+/**
+ * @const addExtensionQuery 커스텀 확장자 추가하는 쿼리문
+ * @const checkDuplicate 중복 체크를 위해 중복값이 있는지 확인하는 쿼리문
+ * @const connection pool에서 커넥션 가져오기 
+ * @const body 클라이언트에서 보낸 데이터 
+ * @const result 중복 체크 쿼리 결과 데이터
+ * @const data 커스텀 확장자 추가 쿼리 결과(추가 아이디 체크하기위해 필요)
+ * 
+ */
 router.post('/add', async function(req, res, next) {
   const addExtensionQuery = 'insert into extensions (name, value) values (?, ?) '
   const checkDuplicate = 'select * from extensions where name = ?'
@@ -49,7 +66,7 @@ router.post('/add', async function(req, res, next) {
       res.send({duplicate: true, message:'이미 존재하는 데이터 입니다'})
     } else {
       const [data] = await connection.query(addExtensionQuery, [body.name, body.value]);
-      res.send({duplicate: false, data}) 
+      res.send({duplicate: false, id: data.insertId}) 
     }
     await connection.commit();
   }catch(error){
@@ -60,6 +77,11 @@ router.post('/add', async function(req, res, next) {
     connection.release()
   }
 }) 
+
+/**
+ * @const deleteExtensionQuery 전체 초기화 화기 위한 쿼리 (단 고정 확장자는 안건드림)
+ * @const result 쿼리 결과문
+ */
 router.delete('/delete/all', async function(req, res) {
   const deleteExtensionQuery = 'delete from extensions where fixed = 0'
   try{
@@ -70,6 +92,12 @@ router.delete('/delete/all', async function(req, res) {
     throw error
   }
 })
+
+/**
+ * @const id 커스텀 확장자 고유 아이디
+ * @const deleteExtensionQuery 해당아이디를 찾아 삭제하는 쿼리문
+ * @const result 쿼리 결과물
+ */
 router.delete('/delete/:id', async function(req, res) {
   const id = req.params.id
   const deleteExtensionQuery = 'delete from extensions where id = ?'
