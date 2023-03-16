@@ -1,14 +1,14 @@
 <template>
-  <v-container>
-      <v-row dense style="align-items:center;">
+  <v-container style="width:70%;">
+      <v-row dense style="align-items:center; width:100%; text-align: center;">
         <v-col cols="2">
           <label>고정 확장자</label>
         </v-col>
-        <v-col cols="10" style="display:flex">
-              <v-checkbox v-for="(item,idx) in extensionFixList" :key="item.id"  :label="item.name" v-model="item.show" @change="changeCheck(item, idx)"></v-checkbox>
+        <v-col cols="10" style="display:flex; justify-content: center; align-items: center;">
+              <v-checkbox style="width:100%;" v-for="(item,idx) in extensionFixList" :key="item.id"  :label="item.name" v-model="item.show" @change="changeCheck(item, idx)"></v-checkbox>
         </v-col>
       </v-row>
-      <v-row dense style="align-items:center;">
+      <v-row dense style="align-items:center; width:100%; text-align: center;">
         <v-col cols="2">
           <label>커스텀 확장자</label>
         </v-col>
@@ -17,11 +17,11 @@
             <v-text-field :rules="rules.extensionRule" counter max-length="20" hide-details="auto" @keypress.enter="addExtension" outlined v-model="newExtension" placeholder="값을 입력하여 주십시오"></v-text-field>
           </v-form>
         </v-col>
-        <v-col cols="2" style="align-items:center;">
+        <v-col cols="3" style="align-items:center;">
           <v-btn :loading="addBtnLoading" @click="addExtension" class="primary" style="width:80%;">추가</v-btn>
         </v-col>
-        <v-col cols="2" style="align-items:center;">
-          <v-btn :loading="addBtnLoading2" @click="deleteAll" class="error" style="width:80%;">초기화</v-btn>
+        <v-col cols="3" style="align-items:center;">
+          <v-btn :loading="addBtnLoading2" @click="deleteAll" class="error" style="width:80%;">커스텀 설정 초기화</v-btn>
         </v-col>
       </v-row>
       <v-row>
